@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stacked Area Chart</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        .area {
+            fill-opacity: 0.7;
+        }
+        .axis path,
+        .axis line {
+            fill: none;
+            shape-rendering: crispEdges;
+        }
+    </style>
+</head>
+<body>
+<svg width="960" height="500"></svg>
+<script>
+    const data = [
+        {month: 'January', Womens: 186, Mens: 246, Kids: 367, Juniors: 505, Shoes: 555, Intimate: 638, Hosiery: 651, Accessories: 765, Home: 555, Groceries: 405},
+        {month: 'February', Womens: 208, Mens: 306, Kids: 306, Juniors: 352, Shoes: 388, Intimate: 407, Hosiery: 473, Accessories: 560, Home: 472, Groceries: 312},
+        {month: 'March', Womens: 196, Mens: 244, Kids: 289, Juniors: 375, Shoes: 386, Intimate: 419, Hosiery: 463, Accessories: 560, Home: 472, Groceries: 312},
+        {month: 'April', Womens: 196, Mens: 244, Kids: 289, Juniors: 375, Shoes: 386, Intimate: 419, Hosiery: 463, Accessories: 560, Home: 472, Groceries: 312},
+        {month: 'May', Womens: 196, Mens: 244, Kids: 289, Juniors: 375, Shoes: 386, Intimate: 419, Hosiery: 463, Accessories: 560, Home: 472, Groceries: 312},
+        {month: 'June', Womens: 196, Mens: 244, Kids: 289, Juniors: 375, Shoes: 386, Intimate: 419, Hosiery: 463, Accessories: 560, Home: 472, Groceries: 312},
+        {month: 'July', Womens: 196, Mens: 244, Kids: 289, Juniors: 375, Shoes: 386, Intimate: 419, Hosiery: 463, Accessories: 560, Home: 472, Groceries: 312}
+    ];
+
+    const svg = d3.select("svg"),
+        margin = {top: 20, right: 30, bottom: 30, left: 40},
+        width = +svg.attr("width") - margin.left - margin.right,
+        height = +svg.attr("height") - margin.top - margin.bottom,
+        g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    const x = d3.scaleBand()
+        .domain(data.map(d => d.month))
+        .range([0, width])
+        .padding(0.1);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d3.sum(Object.keys(d).slice(1).map(key => d[key])))])
+        .range([height, 0]);
+
+    const color = d3.scaleOrdinal()
+        .domain(Object.keys(data[0]).slice(1))
+        .range(d3.schemeCategory10);
+
+    const stack = d3.stack()
+        .keys(Object.keys(data[0]).slice(1));
+
+    const area = d3.area()
+        .x(d => x(d.data.month) + x.bandwidth() / 2)
+        .y0(d => y(d[0]))
+        .y1(d => y(d[1]));
+
+    g.selectAll(".layer")
+        .data(stack(data))
+        .enter().append("path")
+        .attr("class", "layer")
+        .attr("d", area)
+        .style("fill", d => color(d.key));
+
+    g.append("g")
+        .attr("class", "axis axis--x")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x));
+
+    g.append("g")
+        .attr("class", "axis axis--y")
+        .call(d3.axisLeft(y));
+</script>
+</body>
+</html>

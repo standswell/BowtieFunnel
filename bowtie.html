@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Funnel Alignment</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .budget-bar {
+            fill: none;
+            stroke: black;
+            stroke-width: 2px;
+        }
+        .prior-bar {
+            fill: lightgrey;
+        }
+        .actual-bar {
+            fill-opacity: 0.5;
+        }
+        .label {
+            font: 14px sans-serif;
+            text-anchor: middle;
+        }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            width: auto;
+            height: auto;
+            padding: 8px;
+            font: 12px sans-serif;
+            background: rgb(137, 169, 210);
+            border: 0;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <svg width="1000" height="600"></svg>
+    <div>
+        <input type="checkbox" id="actualCheckbox" checked> Actual
+        <input type="checkbox" id="budgetCheckbox" checked> Budget
+        <input type="checkbox" id="priorCheckbox" checked> Prior
+    </div>
+    <div id="monthSelection">
+        <input type="radio" id="jan" name="month" value="0" checked> Jan
+        <input type="radio" id="feb" name="month" value="1"> Feb
+        <input type="radio" id="mar" name="month" value="2"> Mar
+    </div>
+    <script>
+        let data;  // Define data globally
+        const months = ['Jan', 'Feb', 'Mar'];
+
+        const svg = d3.select("svg");
+        const width = +svg.attr("width");
+        const height = +svg.attr("height");
+        const barWidth = 60;
+        const barSpacing = 40;
+        const middlePoint = height / 2;
+        const xStart = 100;
+        const priorOffset = 20;
+
+        const actualCheckbox = d3.select("#actualCheckbox");
+        const budgetCheckbox = d3.select("#budgetCheckbox");
+        const priorCheckbox = d3.select("#priorCheckbox");
+
+        const tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+        function getGradientColor(startColor, endColor, percent) {
+            const start = d3.color(startColor);
+            const end = d3.color(endColor);
+            const r = Math.round(start.r + percent * (end.r - start.r));
+            const g = Math.round(start.g + percent * (end.g - start.g));
+            const b = Math.round(start.b + percent * (end.b - start.b));
+            return `rgba(${r},${g},${b},0.5)`;
+        }
+
+        function updateVisualization(monthIndex) {
+            svg.selectAll("*").remove();
+
+            const monthData = data.filter(d => d.month === +monthIndex); // Filter data by monthIndex
+
+            monthData.forEach((d, i) => {
+                const yOffsetActual = middlePoint - (d.actual / 2);
+                const yOffsetBudget = middlePoint - (d.budget / 2);
+                const yOffsetPrior = middlePoint - (d.prior / 2);
+
+                const baseColor = d.label === 'Purchase' || d.label === 'Loyalty' || d.label === 'Champion' ? '#FF8C00' : (d.label === 'Churn' ? '#FF6666' : '#0000CD');
+                const endColor = d.label === 'Purchase' || d.label === 'Loyalty' || d.label === 'Champion' ? '#FFA07A' : (d.label === 'Churn' ? '#FF9999' : '#6666CC');
+                const actualColor = getGradientColor(baseColor, endColor, 0.5);
+
+                if (priorCheckbox.property("checked")) {
+                    svg.append("rect")
+                        .attr("class", "prior-bar")
+                        .attr("x", xStart + i * (barWidth + barSpacing) - priorOffset)
+                        .attr("y", yOffsetPrior)
+                        .attr("width", barWidth)
+                        .attr("height", d.prior);
+                }
+
+                if (actualCheckbox.property("checked")) {
+                    svg.append("rect")
+                        .attr("class", "actual-bar")
+                        .attr("x", xStart + i * (barWidth + barSpacing))
+                        .attr("y", yOffsetActual)
+                        .attr("width", barWidth)
+                        .attr("height", d.actual)
+                        .attr("fill", actualColor)
+                        .on("mouseover", function(event) {
+                            tooltip.transition()
+                                .duration(200)
+                                .style("opacity", .9);
+                            tooltip.html(`Value: ${d.actual.toFixed(2)}`)
+                                .style("left", (event.pageX + 5) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", function() {
+                            tooltip.transition()
+                                .duration(500)
+                                .style("opacity", 0);
+                        });
+                }
+
+                if (budgetCheckbox.property("checked")) {
+                    svg.append("rect")
+                        .attr("class", "budget-bar")
+                        .attr("x", xStart + i * (barWidth + barSpacing))
+                        .attr("y", yOffsetBudget)
+                        .attr("width", barWidth)
+                        .attr("height", d.budget);
+                }
+
+                svg.append("text")
+                    .attr("class", "label")
+                    .attr("x", xStart + i * (barWidth + barSpacing) + barWidth / 2)
+                    .attr("y", height - 20)
+                    .text(d.label);
+            });
+
+            svg.append("text")
+                .attr("class", "label")
+                .attr("x", width / 2)
+                .attr("y", 30)
+                .attr("font-size", "24px")
+                .text(months[monthIndex]);
+        }
+
+        d3.csv("data.csv").then(function(loadedData) {
+            loadedData.forEach(function(d) {
+                d.month = +d.month;
+                d.actual = +d.actual;
+                d.budget = +d.budget;
+                d.prior = +d.prior;
+            });
+
+            data = loadedData;
+
+            updateVisualization(0);
+
+            d3.selectAll('input[name="month"]').on("change", function() {
+                updateVisualization(this.value);
+            });
+
+            actualCheckbox.on("change", function() {
+                updateVisualization(d3.select('input[name="month"]:checked').node().value);
+            });
+
+            budgetCheckbox.on("change", function() {
+                updateVisualization(d3.select('input[name="month"]:checked').node().value);
+            });
+
+            priorCheckbox.on("change", function() {
+                updateVisualization(d3.select('input[name="month"]:checked').node().value);
+            });
+
+        }).catch(function(error) {
+            console.log(error);
+        });
+    </script>
+</body>
+</html>
