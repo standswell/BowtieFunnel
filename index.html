@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Funnel Alignment</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script defer src="scripts/main.js"></script>
+</head>
+<body>
+    <!-- Add your logo here -->
+    <header>
+        <img src="images/logo.png" alt="Logo" id="logo">
+    </header>
+
+    <h1>Bowtie Funnel</h1>
+    <svg width="1200" height="600"></svg>
+    <div id="chart"></div>
+    <div>
+        <input type="checkbox" id="actualCheckbox" checked> Actual
+        <input type="checkbox" id="budgetCheckbox" checked> Budget
+        <input type="checkbox" id="priorCheckbox" checked> Prior
+        <input type="checkbox" id="forecastCheckbox" checked> Forecast
+        <input type="checkbox" id="futureBudgetCheckbox"> Future Budget
+    </div>
+    <div id="monthSelection">
+        <input type="radio" id="jan" name="month" value="0" checked> Jan
+        <input type="radio" id="feb" name="month" value="1"> Feb
+        <input type="radio" id="mar" name="month" value="2"> Mar
+    </div>
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Detail Data</h2>
+            <div id="detailData"></div>
+        </div>
+    </div>
+</body>
+</html>

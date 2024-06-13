@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Horizontal Sales Funnel</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        .bar {
+            fill: red;
+        }
+        .axis {
+            stroke: black;
+            stroke-width: 2;
+        }
+    </style>
+</head>
+<body>
+    <svg id="sales-funnel" width="800" height="400"></svg>
+
+    <script>
+        const data = [
+            { stage: 'Stage 1', value: 80 },
+            { stage: 'Stage 2', value: 70 },
+            { stage: 'Stage 3', value: 50 },
+            { stage: 'Stage 4', value: 50 },
+            { stage: 'Stage 5', value: 80 },
+            { stage: 'Stage 6', value: 30 }
+        ];
+
+        const width = 800;
+        const height = 400;
+        const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+        const barPadding = 0.1;  // Adjust this value to control the space between bars
+
+        const svg = d3.select("#sales-funnel")
+            .attr("width", width)
+            .attr("height", height);
+
+        const x = d3.scaleBand()
+            .domain(data.map(d => d.stage))
+            .range([margin.left, width - margin.right])
+            .padding(barPadding);
+
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.value)])
+            .nice()
+            .range([height / 2, margin.top]);
+
+        svg.selectAll(".bar")
+            .data(data)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x(d.stage))
+            .attr("y", d => height / 2 - y(d.value))
+            .attr("width", x.bandwidth())
+            .attr("height", d => y(d.value) * 2);
+
+        svg.append("line")
+            .attr("class", "axis")
+            .attr("x1", margin.left)
+            .attr("x2", width - margin.right)
+            .attr("y1", height / 2)
+            .attr("y2", height / 2);
+    </script>
+</body>
+</html>
