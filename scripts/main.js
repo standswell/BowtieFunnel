@@ -190,7 +190,7 @@ function updateVisualization(monthIndex) {
 
 // 7. Data Loading and Initialization
 // Load data from CSV and initialize visualization
-d3.csv("data/data.csv").then(function(loadedData) {
+d3.csv("../data/data.csv").then(function(loadedData) {
 loadedData.forEach(function(d) {
     d.month = +d.month;
     d.actual = +d.actual;
