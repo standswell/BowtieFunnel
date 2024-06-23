@@ -1,5 +1,5 @@
 // 1. Configuration and Constants
-const months = ['Jan', 'Feb', 'Mar'];
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const svg = d3.select("svg");
 const width = +svg.attr("width");
 const height = +svg.attr("height");
@@ -20,6 +20,12 @@ const priorCheckbox = d3.select("#priorCheckbox");
 const forecastCheckbox = d3.select("#forecastCheckbox");
 const futureBudgetCheckbox = d3.select("#futureBudgetCheckbox");
 
+// Create the dropdown for month selection
+const monthDropdown = d3.select("#monthDropdown")
+    .on("change", function() {
+        updateVisualization(this.value);
+    });
+
 // 3. Tooltip and Modal Setup
 const tooltip = d3.select("body").append("div")
     .attr("class", "tooltip")
@@ -39,28 +45,24 @@ window.onclick = function(event) {
 }
 
 // 4. Event Listeners
-d3.selectAll('input[name="month"]').on("change", function() {
-    updateVisualization(this.value);
-});
-
 actualCheckbox.on("change", function() {
-    updateVisualization(d3.select('input[name="month"]:checked').node().value);
+    updateVisualization(d3.select("#monthDropdown").node().value);
 });
 
 budgetCheckbox.on("change", function() {
-    updateVisualization(d3.select('input[name="month"]:checked').node().value);
+    updateVisualization(d3.select("#monthDropdown").node().value);
 });
 
 priorCheckbox.on("change", function() {
-    updateVisualization(d3.select('input[name="month"]:checked').node().value);
+    updateVisualization(d3.select("#monthDropdown").node().value);
 });
 
 forecastCheckbox.on("change", function() {
-    updateVisualization(d3.select('input[name="month"]:checked').node().value);
+    updateVisualization(d3.select("#monthDropdown").node().value);
 });
 
 futureBudgetCheckbox.on("change", function() {
-    updateVisualization(d3.select('input[name="month"]:checked').node().value);
+    updateVisualization(d3.select("#monthDropdown").node().value);
 });
 
 // 5. Helper Functions
@@ -124,90 +126,84 @@ function updateVisualization(monthIndex) {
                 .attr("fill", actualColor)
                 .on("mouseover", function(event) {
                     tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html(`Value: ${d.actual.toFixed(2)}`)
-                        .style("left", (event.pageX + 5) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function() {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                })
-                .on("click", function() { showDetailData(d); });
-        }
+                       
+                    .duration(200)
+                    .style("opacity", .9);
+                tooltip.html(`Value: ${d.actual.toFixed(2)}`)
+                    .style("left", (event.pageX + 5) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function() {
+                tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            })
+            .on("click", function() { showDetailData(d); });
+    }
 
-        if (budgetCheckbox.property("checked")) {
-            svg.append("rect")
-                .attr("class", "budget-bar")
-                .attr("x", xStart + i * (barWidth + barSpacing))
-                .attr("y", yOffsetBudget)
-                .attr("width", barWidth)
-                .attr("height", d.budget)
-                .attr("stroke", d.label === 'Consideration' ? 'red' : 'green')
-                .on("click", function() { showDetailData(d); });
-        }
+    if (budgetCheckbox.property("checked")) {
+        svg.append("rect")
+            .attr("class", "budget-bar")
+            .attr("x", xStart + i * (barWidth + barSpacing))
+            .attr("y", yOffsetBudget)
+            .attr("width", barWidth)
+            .attr("height", d.budget)
+            .attr("stroke", d.label === 'Consideration' ? 'red' : 'green')
+            .on("click", function() { showDetailData(d); });
+    }
 
-        if (forecastCheckbox.property("checked")) {
-            svg.append("rect")
-                .attr("class", "forecast-bar")
-                .attr("x", xStart + i * (barWidth + barSpacing) + barWidth - forecastOffset)
-                .attr("y", yOffsetForecast)
-                .attr("width", barWidth)
-                .attr("height", d.forecast)
-                .on("click", function() { showDetailData(d); });
-        }
+    if (forecastCheckbox.property("checked")) {
+        svg.append("rect")
+            .attr("class", "forecast-bar")
+            .attr("x", xStart + i * (barWidth + barSpacing) + barWidth - forecastOffset)
+            .attr("y", yOffsetForecast)
+            .attr("width", barWidth)
+            .attr("height", d.forecast)
+            .on("click", function() { showDetailData(d); });
+    }
 
-        if (futureBudgetCheckbox.property("checked")) {
-            // Determine the color for the Future Budget
-            const futureBudgetColor = (d.label === 'Awareness' || d.label === 'Familiarity') ? 'green' : 'red';
+    if (futureBudgetCheckbox.property("checked")) {
+        // Determine the color for the Future Budget
+        const futureBudgetColor = (d.label === 'Awareness' || d.label === 'Familiarity') ? 'green' : 'red';
 
-            // Add the future budget bar with the appropriate color dots
-            svg.append("rect")
-                .attr("class", "future-budget-bar")
-                .attr("x", xStart + i * (barWidth + barSpacing) + barWidth - forecastOffset)
-                .attr("y", yOffsetFutureBudget)
-                .attr("width", barWidth)
-                .attr("height", d.futureBudget)
-                .attr("fill", "none")
-                .attr("stroke", futureBudgetColor)
-                .attr("stroke-dasharray", "2,4") // Adjusted for bigger dotted effect
-                .attr("stroke-width", 2)
-                .on("click", function() { showDetailData(d); });
-        }
-
-        svg.append("text")
-            .attr("class", "label")
-            .attr("x", xStart + i * (barWidth + barSpacing) + barWidth / 2)
-            .attr("y", height - 20)
-            .text(d.label);
-    });
+        // Add the future budget bar with the appropriate color dots
+        svg.append("rect")
+            .attr("class", "future-budget-bar")
+            .attr("x", xStart + i * (barWidth + barSpacing) + barWidth - forecastOffset)
+            .attr("y", yOffsetFutureBudget)
+            .attr("width", barWidth)
+            .attr("height", d.futureBudget)
+            .attr("fill", "none")
+            .attr("stroke", futureBudgetColor)
+            .attr("stroke-dasharray", "4,4") // Adjusted for bigger dotted effect
+            .attr("stroke-width", 4)
+            .on("click", function() { showDetailData(d); });
+    }
 
     svg.append("text")
         .attr("class", "label")
-        .attr("x", width / 2)
-        .attr("y", 30)
-        .attr("font-size", "24px")
-        .text(months[monthIndex]);
+        .attr("x", xStart + i * (barWidth + barSpacing) + barWidth / 2)
+        .attr("y", height - 20)
+        .text(d.label);
+});
 }
 
 // 7. Data Loading and Initialization
 // Load data from CSV and initialize visualization
 d3.csv("data/data.csv").then(function(loadedData) {
-    loadedData.forEach(function(d) {
-        d.month = +d.month;
-        d.actual = +d.actual;
-        d.budget = +d.budget;
-        d.prior = +d.prior;
-        d.forecast = +d.forecast;
-        d.futureBudget = +d.futureBudget; // Add this line
-    });
+loadedData.forEach(function(d) {
+    d.month = +d.month;
+    d.actual = +d.actual;
+    d.budget = +d.budget;
+    d.prior = +d.prior;
+    d.forecast = +d.forecast;
+    d.futureBudget = +d.futureBudget; // Add this line
+});
 
-    data = loadedData;
+data = loadedData;
 
-    updateVisualization(0); // Initialize with the first month
+updateVisualization(0); // Initialize with the first month
 
 }).catch(function(error) {
-    console.log(error);
+console.log(error);
 });
