@@ -2,3 +2,4 @@
 Experiment to explore the end-to-end development of a Bowtie Funnel visualisation to represent a SaaS business model.
 
 ![Alt text](images/BowtieFunnel.gif)
+Dummy change to spoof a DevOps task execution.
